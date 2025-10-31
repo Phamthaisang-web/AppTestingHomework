@@ -1,0 +1,11 @@
+POST http://localhost:8080/users
+Content-Type: application/json
+
+{
+  "ten": "Phạm Thái Sang",
+  "tuoi": 22,
+  "que_quan": "Bình Dương",
+  "so_dien_thoai": "0868873407",
+  "chuc_vu": "Kỹ sư phần mềm"
+}
+

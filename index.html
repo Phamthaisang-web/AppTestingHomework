@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tạo nhân sự</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      padding: 40px;
+    }
+    .form-container {
+      max-width: 480px;
+      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 25px 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      margin-top: 20px;
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+
+  <div class="form-container">
+    <h2>Thêm nhân sự</h2>
+    <form id="nhansuForm">
+      <label for="ten">Tên nhân sự *</label>
+      <input type="text" id="ten" name="ten" required minlength="2" maxlength="255" placeholder="Nhập tên nhân sự">
+
+      <label for="tuoi">Tuổi *</label>
+      <input type="number" id="tuoi" name="tuoi" required min="1" max="99" placeholder="VD: 25">
+
+      <label for="que_quan">Quê quán</label>
+      <input type="text" id="que_quan" name="que_quan" maxlength="255" placeholder="VD: Hà Nội">
+
+      <label for="so_dien_thoai">Số điện thoại *</label>
+      <input type="text" id="so_dien_thoai" name="so_dien_thoai" required pattern="^[0-9+]+$" placeholder="VD: 0912345678 hoặc +84912345678">
+
+      <label for="chuc_vu">Chức vụ</label>
+      <input type="text" id="chuc_vu" name="chuc_vu" placeholder="VD: Nhân viên">
+
+      <button type="submit">Tạo nhân sự</button>
+      <div id="message" class="message"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById("nhansuForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      message.textContent = "";
+
+      const data = {
+        ten: form.ten.value.trim(),
+        tuoi: Number(form.tuoi.value),
+        que_quan: form.que_quan.value.trim() || null,
+        so_dien_thoai: form.so_dien_thoai.value.trim(),
+        chuc_vu: form.chuc_vu.value.trim() || "Nhân viên",
+      };
+
+      try {
+        const res = await fetch("http://localhost:8080/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          message.textContent = "✅ Thêm nhân sự thành công!";
+          message.className = "message success";
+          form.reset();
+        } else {
+          message.textContent = "❌ Lỗi: " + (result.message || "Không xác định");
+          message.className = "message error";
+        }
+      } catch (error) {
+        console.error(error);
+        message.textContent = "⚠️ Kết nối server thất bại!";
+        message.className = "message error";
+      }
+    });
+  </script>
+
+</body>
+</html>
