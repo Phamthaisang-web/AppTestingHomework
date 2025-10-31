@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Management</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; }
+    h1 { color: #333; margin-bottom: 20px; }
+    
+    /* Container for the form */
+    .form-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+    
+    /* Input and Select Styling */
+    .input-field {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box; /* Include padding in the element's total width and height */
+    }
+
+    /* Styling for the label/title "Thêm người dùng mới" */
+    .form-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    /* Styling for the dropdown label "Loại" */
+    .label-type {
+        display: block;
+        margin-top: 5px;
+        color: #555;
+    }
+
+    /* Button Styling (Tạo mới) */
+    #userForm button {
+      background-color: #007bff; /* Blue button color */
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%; /* Full width button */
+      margin-top: 10px;
+      transition: background-color 0.2s;
+    }
+
+    #userForm button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Table Styling */
+    .table-container {
+        overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden; /* Ensures the border-radius is visible */
+    }
+
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 12px 15px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f8f8f8;
+      color: #333;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    /* Alternating row colors for better readability */
+    #userTable tbody tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    #userTable tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+  <h1>User Management</h1>
+
+  <div class="form-container">
+    <div class="form-title">Thêm người dùng mới</div>
+    <!-- Thêm div thông báo ngay trên form -->
+<div id="notification" style="display:none; padding:10px; border-radius:5px; margin-bottom:15px;"></div>
+
+    <form id="userForm">
+      <input type="text" id="fullName" class="input-field" placeholder="Full Name (e.g., Phạm thái Sang)"  />
+      <input type="email" id="email" class="input-field" placeholder="Email (e.g., phamthaisang17310@gmail.com)"  />
+      <input type="text" id="phone" class="input-field" placeholder="Phone (e.g., 0868873407)" />
+      
+      <label for="type" class="label-type">Loại</label>
+      <select id="type" class="input-field">
+        <option value="student">student</option>
+        <option value="worker">worker</option>
+        <option value="other">other</option>
+      </select>
+      
+      <button type="submit">Tạo mới</button>
+    </form>
+  </div>
+
+  <h2>Users List</h2>
+  <div class="table-container">
+    <table id="userTable">
+      <thead>
+        <tr><th>Full Name</th><th>Email</th><th>Phone</th><th>Type</th></tr>
+      </thead>
+      <tbody>
+        </tbody>
+    </table>
+  </div>
+
+  <script>
+    // NOTE: This API URL assumes you have a running 'json-server' instance
+    // on port 3000 with a 'users' resource.
+    const API_URL = "http://localhost:3000/users";
+
+    // 1. Function to load and display users
+    async function loadUsers() {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        // **PHẦN ĐÃ SỬA:** Lấy dữ liệu từ API
+        const apiResponse = await res.json();
+        
+        // **QUAN TRỌNG:** Kiểm tra và lấy mảng người dùng từ trường 'data'
+        // Nếu API trả về thành công và có trường 'data', thì dùng 'apiResponse.data'
+        // Nếu API trả về mảng trực tiếp (như json-server mặc định), thì dùng 'apiResponse'
+        const users = apiResponse.data || apiResponse; 
+
+        // Đảm bảo users là một mảng trước khi lặp
+        if (!Array.isArray(users)) {
+            console.error("API did not return an array of users in the expected format.");
+            return;
+        }
+
+        const tbody = document.querySelector("#userTable tbody");
+        tbody.innerHTML = ""; // Clear existing rows
+        
+        // Loop through users and create a row for each
+        users.forEach(u => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${u.fullName}</td>
+            <td>${u.email}</td>
+            <td>${u.phone || "N/A"}</td>
+            <td>${u.type}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Failed to load users. Check API status and CORS settings:", error);
+        // alert("Could not connect to the API. Check your backend console.");
+      }
+    }
+
+    // 2. Function to handle form submission (Create New User)
+    document.getElementById("userForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const newUser = {
+        fullName: document.getElementById("fullName").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        type: document.getElementById("type").value,
+      };
+
+      try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newUser),
+          });
+
+          // API POST request cũng cần xử lý phản hồi, nhưng chúng ta chỉ cần kiểm tra res.ok
+          function showNotification(message, type = "success") {
+    const notif = document.getElementById("notification");
+    notif.style.display = "block";
+    notif.textContent = message;
+    if (type === "success") {
+        notif.style.backgroundColor = "#d4edda";
+        notif.style.color = "#155724";
+        notif.style.border = "1px solid #c3e6cb";
+    } else if (type === "error") {
+        notif.style.backgroundColor = "#f8d7da";
+        notif.style.color = "#721c24";
+        notif.style.border = "1px solid #f5c6cb";
+    }
+    // Tự ẩn sau 3s
+    setTimeout(() => {
+        notif.style.display = "none";
+    }, 3000);
+}
+
+// Trong phần submit form
+if (res.ok) {
+    showNotification("User created successfully!", "success");
+    e.target.reset();
+    loadUsers();
+} else {
+    const err = await res.json(); // Chuyển đổi thành JSON nếu backend trả về JSON
+    const msg = Array.isArray(err.message) ? err.message.join(", ") : err.message;
+    showNotification(msg, "error");
+}
+      } catch (error) {
+          console.error("Error submitting form:", error);
+          alert("A network error occurred. Check your API connection.");
+      }
+    });
+
+    // 3. Initial load of users when the page loads
+    loadUsers();
+</script>
+</body>
+</html>

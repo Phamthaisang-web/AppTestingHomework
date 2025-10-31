@@ -30,9 +30,11 @@ const createUser = async (
   // Kiểm tra email trùng
   const existingUser = users.find((u) => u.email === email);
   if (existingUser) {
-    throw new Error("Email already exists.");
+    // ✅ Ném lỗi có cấu trúc thay vì Error
+    const error: any = new Error("Email already exists.");
+    error.statusCode = 400;
+    throw error;
   }
-
   const newUser: IUser = {
     ...userData,
     id: Math.random().toString(36).substring(2, 9), // Tạo ID ngẫu nhiên
